@@ -24,17 +24,18 @@ url = "https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/dolnoslaskie/wroclaw/
 session.headers = headers
 response = session.get(url, timeout=25)
 
-
 #Second part of a link added to "https://www.otodom.pl"
 results = re.findall(r'(?<=<a data-cy="listing-item-link" href=")(.+?)(?=")', response.text)
 
 # remove first 3 proposed elements
-print("-" * 100)
 results = results[3:]
-
 
 for result in results:
     get_page_and_scrape_data(domain + result, headers)
-    #time.sleep(1)
+    time.sleep(5)
+
+
+
+
 
 
