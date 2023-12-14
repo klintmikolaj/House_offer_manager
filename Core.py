@@ -9,10 +9,10 @@ class Core:
     def __init__(self):
         self.domain = "https://www.otodom.pl"
         self.offer_list = [] #lista przechowuje obiekty dataclass
-        self.db = mysql.connector.connect(host="localhost",  user="root", passwd="eloelo320") #obiekt MySQL.connector, przechowuje połączenie do bazy danych, zatwierdzamy zmiany w bazie danych
+        self.db = mysql.connector.connect(host="localhost",  user="root", passwd="eloelo320", database="homes")
         self.db_cursor = self.db.cursor()
         self.headers = OrderedDict()
-        self.page_id = ""
+        self.max_page_id = 5
 
     def init_headers(self):
         self.headers = OrderedDict([('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'),
@@ -39,6 +39,8 @@ class Core:
             price = re.search(r'(?<=,"Price":)(\d+)', response.text).group(1)
             if street := re.search(r'({"street":{"id":"\d*","code":"","name":")(.+?)(?=")', response.text):
                 street = street.group(2)
+            else:
+                street = [x for x in re.finditer(r'(?<=,"fullNameItems":\[")(.+?)(?=",)', response.text)][-1].group(1)
             room_count = re.search(r'(?<="numberOfRooms":)(\d+)', response.text).group(1)
             price_per_m2 = re.search(r'(?<="key":"price_per_m","value":")(\d+)', response.text).group(1)
             district = re.search(r'(district":{"id":"\d*","code":")(.+?)(?=")', response.text).group(2)
@@ -46,6 +48,7 @@ class Core:
             print(offer_id)
             print(price)
             print (street)
+            print(district)
 
             self.offer_list.append(Offer(offer_id, price, street, room_count, price_per_m2, district, add_date))
 
@@ -55,8 +58,9 @@ class Core:
             print("\n ")
 
     def get_offer_list(self):
+        # for current_page_id in range(1, self.max_page_id + 1):
         session = requests.session()
-        url = "https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?viewType=listing&page=" + self.page_id + "by=LATEST&direction=DESC"
+        url = f"https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?viewType=listing&page={self.max_page_id}by=LATEST&direction=DESC"
         session.headers = self.headers
         response = session.get(url, timeout=25)
 
@@ -68,32 +72,32 @@ class Core:
 
         for result in results:
             self.get_page_and_scrape_data(self.domain + result)
-            time.sleep(1)
+            time.sleep(5)
 
     def create_database(self):
-        # Create a new database if it doesn't exist
-        self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes")
+        self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes_db")
         self.db_cursor.execute("USE homes")
         self.db_cursor.execute("""
-            CREATE TABLE IF NOT EXISTS offers (
-                offerID VARCHAR(200) PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS homes_tb (
+                offer_id VARCHAR(500) PRIMARY KEY,
                 price INT UNSIGNED,
-                street VARCHAR(200),
+                street VARCHAR(500),
                 room_count SMALLINT UNSIGNED,
                 price_per_m2 SMALLINT UNSIGNED,
-                district VARCHAR(50),
+                district VARCHAR(500),
                 add_date DATETIME
             )
         """)
         self.db.commit()
 
-    def connect_database(self):
-        ...
-    ''' laczy sie z baza  '''
     def upload_to_database(self):
+
         for offer in self.offer_list:
-            self.db_cursor.execute("INSERT INTO offers (offer_id, price, street, room_count, price_per_m2, district, add_date) VALUES (%s, %s, %s, %s, %s, %s, %s)" % (
-            offer.offer_id, offer.price, offer.street, offer.room_count, offer.price_per_m2, offer.district, offer.add_date))
+            self.db_cursor.execute("INSERT IGNORE INTO homes_tb (offer_id, price, street, room_count, price_per_m2, district, add_date) VALUES (%s, %s, %s, %s, %s, %s, %s)" , (
+                offer.offer_id, offer.price, offer.street, offer.room_count, offer.price_per_m2, offer.district, offer.add_date))
+            self.db.commit()
+
+
 
     def run(self):
         self.init_headers()
