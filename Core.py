@@ -8,7 +8,7 @@ import mysql.connector
 class Core:
     def __init__(self):
         self.domain = "https://www.otodom.pl"
-        self.offer_list = [] #lista przechowuje obiekty dataclass
+        self.offer_list = [] #The list stores dataclass objects
         self.db = mysql.connector.connect(host="localhost",  user="root", passwd="eloelo320", database="homes")
         self.db_cursor = self.db.cursor()
         self.headers = OrderedDict()
@@ -45,6 +45,8 @@ class Core:
             price_per_m2 = re.search(r'(?<="key":"price_per_m","value":")(\d+)', response.text).group(1)
             district = re.search(r'(district":{"id":"\d*","code":")(.+?)(?=")', response.text).group(2)
             add_date = re.search(r'(?<=,"createdAt":")(.+?)(?=")', response.text).group(1)
+
+            #test
             print(offer_id)
             print(price)
             print (street)
@@ -75,7 +77,7 @@ class Core:
             time.sleep(5)
 
     def create_database(self):
-        self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes_db")
+        self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes")
         self.db_cursor.execute("USE homes")
         self.db_cursor.execute("""
             CREATE TABLE IF NOT EXISTS homes_tb (
