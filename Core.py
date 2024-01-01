@@ -60,21 +60,21 @@ class Core:
             print("\n ")
 
     def get_offer_list(self):
-        # for current_page_id in range(1, self.max_page_id + 1):
-        session = requests.session()
-        url = f"https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?viewType=listing&page={self.max_page_id}by=LATEST&direction=DESC"
-        session.headers = self.headers
-        response = session.get(url, timeout=25)
+        for current_page_id in range(1, self.max_page_id + 1):
+            session = requests.session()
+            url = f"https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?viewType=listing&page={self.max_page_id}by=LATEST&direction=DESC"
+            session.headers = self.headers
+            response = session.get(url, timeout=25)
 
-        # Second part of a link added to "https://www.otodom.pl"
-        results = re.findall(r'(?<=<a data-cy="listing-item-link" href=")(.+?)(?=")', response.text)
+            # Second part of a link added to "https://www.otodom.pl"
+            results = re.findall(r'(?<=<a data-cy="listing-item-link" href=")(.+?)(?=")', response.text)
 
-        # remove first 3 proposed elements
-        results = results[3:]
+            # remove first 3 proposed elements
+            results = results[3:]
 
-        for result in results:
-            self.get_page_and_scrape_data(self.domain + result)
-            time.sleep(5)
+            for result in results:
+                self.get_page_and_scrape_data(self.domain + result)
+                time.sleep(5)
 
     def create_database(self):
         self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes")
