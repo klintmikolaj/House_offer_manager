@@ -30,7 +30,7 @@ class User:
         RESET = '\033[0m'
 
         print(WHITE + "---------------------------------------" + RESET)
-        print(RED + "Welcome to House Offer Manager!" + RESET)
+        print(RED + "Welcome to the House Offer Manager!" + RESET)
         print(WHITE + "press 'h' to display the help panel" + RESET)
         print(WHITE + "press 'q' to quit" + RESET)
         print(WHITE + "---------------------------------------" + RESET)
@@ -172,9 +172,5 @@ class User:
 
 test = User()
 test.user()
-#test.average_room_count_per_district()
-# test.average_price_per_district()
-# test.average_m2_price_per_district()
-# flag = 'l'
-# test.most_least_expensive_streets(flag)
+
 
