@@ -50,7 +50,7 @@ class User:
             elif command == 'les':
                 self.most_least_expensive_streets('l')
             elif command == "q":
-                break
+                return 0
             else:
                 print(RED + "Unknown instruction, press 'h' to display the help panel" + RESET)
     def float_to_int(self, x):
@@ -70,7 +70,6 @@ class User:
 
         # Sortowanie dzielnic od największej do najmniejszej średniej ceny
         sorted_district_prices = sorted(district_prices.items(), key=lambda item: item[1], reverse=True)
-
         districts, average_prices = zip(*sorted_district_prices)  # Rozpakowanie do oddzielnych list
         y_pos = np.arange(len(districts))
 
@@ -88,6 +87,7 @@ class User:
         plt.xlabel('Średnia cena')
         plt.ylabel('Dzielnica')
         plt.tight_layout()
+        plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
 
@@ -114,6 +114,7 @@ class User:
         plt.xlabel('Średnia liczba pokoi')
         plt.ylabel('Dzielnica')
         plt.tight_layout()
+        plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
     def average_m2_price_per_district(self):
@@ -139,6 +140,7 @@ class User:
         plt.xlabel('Średnia cena m2')
         plt.ylabel('Dzielnica')
         plt.tight_layout()
+        plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
     def most_least_expensive_streets(self, flag):
@@ -167,6 +169,7 @@ class User:
                      va='center', ha='left')
 
         plt.tight_layout()
+        plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
 

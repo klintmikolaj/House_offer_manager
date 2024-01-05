@@ -74,7 +74,7 @@ class Core:
 
             for result in results:
                 self.get_page_and_scrape_data(self.domain + result)
-                time.sleep(5)
+                time.sleep(1)
 
     def create_database(self):
         self.db_cursor.execute("CREATE DATABASE IF NOT EXISTS homes")
