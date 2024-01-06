@@ -82,7 +82,7 @@ class User:
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():,}',
-                     va='center', ha='left')
+                     va='center', ha='left', fontsize=6)
         plt.title('Średnia cena mieszkań na dzielnicę')
         plt.xlabel('Średnia cena')
         plt.ylabel('Dzielnica')
@@ -102,14 +102,14 @@ class User:
         districts, average_room_counts = zip(*sorted_district_room_counts)  # Rozpakowanie do oddzielnych list
         y_pos = np.arange(len(districts))
 
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(8, 8))
         bars = plt.barh(y_pos, average_room_counts, color='#ebdb02')
         plt.yticks(y_pos, districts)
         plt.gca().invert_yaxis()
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():.1f}',
-                     va='center', ha='left')
+                     va='center', ha='left', fontsize=8)
         plt.title('Średnia liczba pokoi na dzielnicę')
         plt.xlabel('Średnia liczba pokoi')
         plt.ylabel('Dzielnica')
@@ -135,7 +135,7 @@ class User:
         plt.gca().invert_yaxis()
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():.1f}',
-                     va='center', ha='left')
+                     va='center', ha='left', fontsize=6)
         plt.title('Średnia cena m2 na dzielnicę')
         plt.xlabel('Średnia cena m2')
         plt.ylabel('Dzielnica')
@@ -166,7 +166,7 @@ class User:
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():,.0f} PLN',
-                     va='center', ha='left')
+                     va='center', ha='left', fontsize=9)
 
         plt.tight_layout()
         plt.grid(color='grey', linestyle='-', linewidth=0.25)
