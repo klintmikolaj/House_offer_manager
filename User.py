@@ -1,9 +1,10 @@
 import matplotlib
 from matplotlib import pyplot as plt
-matplotlib.use('TkAgg') # For opening pyplots in new windows
 import numpy as np
 import mysql.connector
 from matplotlib.ticker import FuncFormatter
+from Core import Core
+matplotlib.use('TkAgg') # For opening pyplots in new windows
 
 class User:
     def __init__(self):
@@ -18,9 +19,12 @@ class User:
         print(WHITE + "---------------------------------------" + RESET)
         print(BLUE + "This is the help panel" + RESET)
         print(MAGENTA + "> q " + WHITE + "- quits the program" + RESET)
+        print(MAGENTA + "> db " + WHITE + "- adds new offers to the database" + RESET)
         print(MAGENTA + "> appd " + WHITE + "- displays the chart of average price per district " + RESET)
         print(MAGENTA + "> arcpd " + WHITE + "- displays the chart of average room count per district " + RESET)
         print(MAGENTA + "> amppd " + WHITE + "- displays the chart of average m2 price per district" + RESET)
+        print(MAGENTA + "> od " + WHITE + "- displays the chart showing the offers distribution by district" + RESET)
+        print(MAGENTA + "> apbr " + WHITE + "- displays the chart showing the average price for m2 depending on the number of rooms" + RESET)
         print(MAGENTA + "> mes " + WHITE + "- displays the chart of 5 most expensive streets by average price " + RESET)
         print(MAGENTA + "> les " + WHITE + "- displays the chart of 5 least expensive streets by average price " + RESET)
         print(WHITE + "---------------------------------------" + RESET)
@@ -36,7 +40,7 @@ class User:
         print(WHITE + "---------------------------------------" + RESET)
 
         while True:
-            command = input(WHITE + "Give me some instructions > " + RESET)
+            command = input(WHITE + "Give me some instructions > " + RESET).strip()
             if command == 'h':
                 self.help()
             elif command == 'appd':
@@ -49,6 +53,13 @@ class User:
                 self.most_least_expensive_streets('h')
             elif command == 'les':
                 self.most_least_expensive_streets('l')
+            elif command == "db":
+                core_instance = Core()
+                core_instance.run()
+            elif command == "od":
+                self.offer_distribution()
+            elif command == "apbr":
+                self.avg_price_m2_by_room()
             elif command == "q":
                 return 0
             else:
@@ -64,25 +75,32 @@ class User:
         return f'{int(x)}'
 
     def average_price_per_district(self):
+        # Creates db query
         self.db_cursor.execute("SELECT district, AVG(price) as average_price FROM homes_tb GROUP BY district")
+
+        # Creates the list of tuples where one tuple represents one row in the db
         results = self.db_cursor.fetchall()
+
+        # Creates a dict where a link from an offer is a key value, then sorts it by price
         district_prices = {row[0]: self.float_to_int(row[1]) for row in results}
-
-        # Sortowanie dzielnic od największej do najmniejszej średniej ceny
         sorted_district_prices = sorted(district_prices.items(), key=lambda item: item[1], reverse=True)
-        districts, average_prices = zip(*sorted_district_prices)  # Rozpakowanie do oddzielnych list
-        y_pos = np.arange(len(districts))
 
-        plt.figure(figsize=(10, 8))
+        # Unpacks the data to two separate lists
+        districts, average_prices = zip(*sorted_district_prices)
+
+        # Sets a proper position for every district name on y-axis
+        y_pos = np.arange(len(districts))
+        plt.figure(figsize=(12, 8))
         bars = plt.barh(y_pos, average_prices, color='#2990cc')
-        plt.yticks(y_pos, districts)
+        plt.yticks(y_pos, districts, size=7)
 
         plt.gca().invert_yaxis()
         plt.gca().xaxis.set_major_formatter(FuncFormatter(self.millions_formatter))
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():,}',
-                     va='center', ha='left', fontsize=6)
+                     va='center', ha='left', size=7)
+
         plt.title('Średnia cena mieszkań na dzielnicę')
         plt.xlabel('Średnia cena')
         plt.ylabel('Dzielnica')
@@ -90,26 +108,51 @@ class User:
         plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
+    def offer_distribution(self):
+        self.db_cursor.execute("SELECT district, COUNT(*) as offers_count FROM homes_tb GROUP BY district")
+        results = self.db_cursor.fetchall()
+
+        # Creates a dict from received data
+        district_offers = {row[0]: row[1] for row in results}
+
+        sorted_district_offers = sorted(district_offers.items(), key=lambda item: item[1], reverse=True)
+
+        # Sorting districts from largest to lowest avg room count
+        districts, offers_counts = zip(*sorted_district_offers)
+
+        plt.figure(figsize=(20, 8))
+        plt.bar(districts, offers_counts, color='skyblue')
+        plt.title('Dystrybucja ofert według dzielnic')
+        plt.xlabel('Dzielnica')
+        plt.ylabel('Liczba ofert')
+
+        # Adds value to certain bars
+        for i, count in enumerate(offers_counts):
+            plt.text(i, count, f'{count}', ha='center', va='bottom', size=7)
+
+        plt.xticks(rotation=45)
+        plt.grid(axis='y', linestyle='--', linewidth=0.5)
+        plt.tight_layout()
+        plt.show()
 
     def average_room_count_per_district(self):
         self.db_cursor.execute("SELECT district, AVG(room_count) as average_room_count FROM homes_tb GROUP BY district")
         results = self.db_cursor.fetchall()
         district_room_counts = {row[0]: row[1] for row in results}
 
-        # Sortowanie dzielnic od największej do najmniejszej średniej liczby pokoi
         sorted_district_room_counts = sorted(district_room_counts.items(), key=lambda item: item[1], reverse=True)
 
         districts, average_room_counts = zip(*sorted_district_room_counts)  # Rozpakowanie do oddzielnych list
         y_pos = np.arange(len(districts))
 
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(10, 8))
         bars = plt.barh(y_pos, average_room_counts, color='#ebdb02')
-        plt.yticks(y_pos, districts)
+        plt.yticks(y_pos, districts, size=7)
         plt.gca().invert_yaxis()
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():.1f}',
-                     va='center', ha='left', fontsize=8)
+                     va='center', ha='left', size=7)
         plt.title('Średnia liczba pokoi na dzielnicę')
         plt.xlabel('Średnia liczba pokoi')
         plt.ylabel('Dzielnica')
@@ -122,20 +165,24 @@ class User:
         results = self.db_cursor.fetchall()
         district_price_per_m2 = {row[0]: row[1] for row in results}
 
-        # Sortowanie dzielnic od największej do najmniejszej średniej liczby pokoi
+        # Sorting districts from largest to lowest avg room count
         sorted_district_room_counts = sorted(district_price_per_m2.items(), key=lambda item: item[1], reverse=True)
 
-        districts, average_room_counts = zip(*sorted_district_room_counts)  # Rozpakowanie do oddzielnych list
+        # Unpacks data to separate lists
+        districts, average_room_counts = zip(*sorted_district_room_counts)
         y_pos = np.arange(len(districts))
 
-        plt.figure(figsize=(10, 8))  # Ustawienie sensownych rozmiarów wykresu
+        plt.figure(figsize=(10, 8))
         bars = plt.barh(y_pos, average_room_counts, color='#eb021d')
-        plt.yticks(y_pos, districts)
+        plt.yticks(y_pos, districts, size=7)
 
         plt.gca().invert_yaxis()
+
+        # Adds data value to every bar
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():.1f}',
-                     va='center', ha='left', fontsize=6)
+                     va='center', ha='left', size=7)
+
         plt.title('Średnia cena m2 na dzielnicę')
         plt.xlabel('Średnia cena m2')
         plt.ylabel('Dzielnica')
@@ -166,14 +213,37 @@ class User:
 
         for bar in bars:
             plt.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, f'{bar.get_width():,.0f} PLN',
-                     va='center', ha='left', fontsize=9)
+                     va='center', ha='left')
 
         plt.tight_layout()
         plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
+    def avg_price_m2_by_room(self):
+        self.db_cursor.execute("""
+                SELECT room_count, AVG(price_per_m2) as average_price_per_m2
+                FROM homes_tb
+                GROUP BY room_count
+                ORDER BY room_count
+            """)
+        results = self.db_cursor.fetchall()
+        room_counts, average_prices_per_m2 = zip(*results)
 
-test = User()
-test.user()
+
+        plt.figure(figsize=(10, 8))
+        plt.bar(room_counts, average_prices_per_m2, color='green')
+        for i, price in enumerate(average_prices_per_m2):
+            plt.annotate(f'{price:.2f}',
+                         (room_counts[i], price),
+                         textcoords="offset points",
+                         xytext=(0, 10),
+                         ha='center')
+
+        plt.title('Średnia cena za metr kwadratowy w zależności od liczby pokoi')
+        plt.xlabel('Liczba pokoi')
+        plt.ylabel('Średnia cena za m^2 [PLN]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
 
 
