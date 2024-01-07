@@ -34,7 +34,7 @@ class Core:
         self.db = mysql.connector.connect(host="localhost", user="root", passwd="eloelo320", database="homes")
         self.db_cursor = self.db.cursor()
         self.headers = OrderedDict()
-        self.max_page_id = 10
+        self.max_page_id = 1
 
     def init_headers(self):
         '''Request headers to imitate the web browser'''

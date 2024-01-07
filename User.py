@@ -24,6 +24,7 @@ class User:
         print(MAGENTA + "> arcpd " + WHITE + "- displays the chart of average room count per district " + RESET)
         print(MAGENTA + "> amppd " + WHITE + "- displays the chart of average m2 price per district" + RESET)
         print(MAGENTA + "> od " + WHITE + "- displays the chart showing the offers distribution by district" + RESET)
+        print(MAGENTA + "> odp " + WHITE + "- displays the chart showing the offers distribution by district in the pie chart" + RESET)
         print(MAGENTA + "> apbr " + WHITE + "- displays the chart showing the average price for m2 depending on the number of rooms" + RESET)
         print(MAGENTA + "> mes " + WHITE + "- displays the chart of 5 most expensive streets by average price " + RESET)
         print(MAGENTA + "> les " + WHITE + "- displays the chart of 5 least expensive streets by average price " + RESET)
@@ -58,6 +59,8 @@ class User:
                 core_instance.run()
             elif command == "od":
                 self.offer_distribution()
+            elif command == "odp":
+                self.offer_distribution_pie()
             elif command == "apbr":
                 self.avg_price_m2_by_room()
             elif command == "q":
@@ -108,6 +111,39 @@ class User:
         plt.grid(color='grey', linestyle='-', linewidth=0.25)
         plt.show()
 
+    def offer_distribution_pie(self):
+        self.db_cursor.execute("SELECT district, COUNT(*) as offers_count FROM homes_tb GROUP BY district")
+        results = self.db_cursor.fetchall()
+
+        # Creates a dict from received data
+        district_offers = {row[0]: row[1] for row in results}
+
+        total_offers = sum(district_offers.values())
+        min_percentage = 0.02  # 2%
+
+        # Process data to group small districts into 'Other'
+        small_districts_total = 0
+        districts_to_remove = []
+        for district, count in district_offers.items():
+            if count / total_offers < min_percentage:
+                small_districts_total += count
+                districts_to_remove.append(district)
+
+        # Remove small districts and add 'Other' category
+        for district in districts_to_remove:
+            del district_offers[district]
+        district_offers['Inne'] = small_districts_total
+
+        # Extracts districts and offers counts
+        districts, offers_counts = zip(*district_offers.items())
+
+        plt.figure(figsize=(10, 10))  # Adjust the size as necessary
+        plt.pie(offers_counts, labels=districts, autopct='%1.1f%%', startangle=140)
+        plt.title('Dystrybucja ofert według dzielnic')
+
+        plt.tight_layout()
+        plt.show()
+
     def offer_distribution(self):
         self.db_cursor.execute("SELECT district, COUNT(*) as offers_count FROM homes_tb GROUP BY district")
         results = self.db_cursor.fetchall()
@@ -132,6 +168,7 @@ class User:
 
         plt.xticks(rotation=45)
         plt.grid(axis='y', linestyle='--', linewidth=0.5)
+        plt.xticks(rotation=90, fontsize=7)
         plt.tight_layout()
         plt.show()
 
